@@ -6,7 +6,7 @@ export async function GET(req, { params }) {
   const video = videos.find((v) => v.videoId === id);
 
   if (!video) {
-    return new Response("Video not found", { status: 404 });
+    return NextResponse.json({ error: "Video not found" }, { status: 404 });
   }
 
   return NextResponse.json(video);
@@ -26,11 +26,9 @@ export async function PATCH(req, { params }) {
     );
 
     if (invalidFields.length > 0) {
-      return new Response(
-        JSON.stringify({
-          error: `Invalid field(s) provided: ${invalidFields.join(", ")}`,
-        }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+      return NextResponse.json(
+        { error: `Invalid field(s) provided: ${invalidFields.join(", ")}` },
+        { status: 400 }
       );
     }
 
@@ -38,10 +36,7 @@ export async function PATCH(req, { params }) {
     const videoIndex = videos.findIndex((video) => video.videoId === id);
 
     if (videoIndex === -1) {
-      return new Response(JSON.stringify({ error: "Video not found" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json" },
-      });
+      return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
     // Update the video object
@@ -51,21 +46,32 @@ export async function PATCH(req, { params }) {
     };
 
     // Return the updated video object
-    return new Response(
-      JSON.stringify({
-        message: "Video updated successfully!",
-        video: videos[videoIndex],
-      }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+    return NextResponse.json(
+      { message: "Video updated successfully!", video: videos[videoIndex] },
+      { status: 200 }
     );
   } catch (error) {
     // Handle unexpected errors
-    return new Response(
-      JSON.stringify({
-        error: "Something went wrong",
-        details: error.message,
-      }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+    return NextResponse.json(
+      { error: "Something went wrong", details: error.message },
+      { status: 500 }
     );
   }
+}
+
+export async function DELETE(req, { params }) {
+  const { id } = params;
+
+  const videoIndex = videos.findIndex((v) => v.videoId === id);
+
+  if (videoIndex === -1) {
+    return NextResponse.json({ error: "Video not found" }, { status: 404 });
+  }
+
+  const deletedVideo = videos.splice(videoIndex, 1);
+
+  return NextResponse.json({
+    message: "Video deleted successfully!",
+    deletedVideo,
+  });
 }
